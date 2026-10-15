@@ -9,12 +9,15 @@
 
 #include "steamtypes.h"
 #include "steamuniverse.h"
+#include "steamcommon.h"
 
 // Josh: Fixes building gcsdk which passes in stuff from protobuf.
 #if defined( PLATFORM_64BITS ) && defined( LINUX )
 #include <stdint.h>
 #define INT64_DIFFERENT_FROM_INT64_T
 #endif
+
+extern const int k_unSteamUserDesktopInstance;
 
 // General result codes
 enum EResult
@@ -582,6 +585,35 @@ public:
 		m_steamid.m_comp.m_EAccountType = eAccountType;
 	}
 
+#if defined( INCLUDED_STEAM2_USERID_STRUCTS ) 
+	//-----------------------------------------------------------------------------
+	// Purpose: Initializes a steam ID from a Steam2 ID structure
+	// Input:	pTSteamGlobalUserID -	Steam2 ID to convert
+	//			eUniverse -				universe this ID belongs to
+	//-----------------------------------------------------------------------------
+	void SetFromSteam2(TSteamGlobalUserID* pTSteamGlobalUserID, EUniverse eUniverse)
+	{
+		m_steamid.m_comp.m_unAccountID = pTSteamGlobalUserID->m_SteamLocalUserID.Split.Low32bits * 2 +
+			pTSteamGlobalUserID->m_SteamLocalUserID.Split.High32bits;
+		m_steamid.m_comp.m_EUniverse = eUniverse;		// set the universe
+		m_steamid.m_comp.m_EAccountType = k_EAccountTypeIndividual; // Steam 2 accounts always map to account type of individual
+		m_steamid.m_comp.m_unAccountInstance = k_unSteamUserDesktopInstance; // Steam2 only knew desktop instances
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Fills out a Steam2 ID structure
+	// Input:	pTSteamGlobalUserID -	Steam2 ID to write to
+	//-----------------------------------------------------------------------------
+	void ConvertToSteam2(TSteamGlobalUserID* pTSteamGlobalUserID) const
+	{
+		// only individual accounts have any meaning in Steam 2, only they can be mapped
+		// Assert( m_steamid.m_comp.m_EAccountType == k_EAccountTypeIndividual );
+
+		pTSteamGlobalUserID->m_SteamInstanceID = 0;
+		pTSteamGlobalUserID->m_SteamLocalUserID.Split.High32bits = m_steamid.m_comp.m_unAccountID % 2;
+		pTSteamGlobalUserID->m_SteamLocalUserID.Split.Low32bits = m_steamid.m_comp.m_unAccountID / 2;
+	}
+#endif // defined( INCLUDED_STEAM_COMMON_STEAMCOMMON_H )
 
 	//-----------------------------------------------------------------------------
 	// Purpose: Initializes a steam ID from its 64-bit representation
@@ -775,6 +807,7 @@ public:
     // and is preferred when the caller knows it's safe to be strict.
     // Returns whether the string parsed correctly.
 	bool SetFromStringStrict( const char *pchSteamID, EUniverse eDefaultUniverse );
+	bool SetFromSteam2String(const char* pchSteam2ID, EUniverse eUniverse);
 
 	inline bool operator==( const CSteamID &val ) const { return m_steamid.m_unAll64Bits == val.m_steamid.m_unAll64Bits; } 
 	inline bool operator!=( const CSteamID &val ) const { return !operator==( val ); }

@@ -14,6 +14,9 @@
 #include "shareddefs.h"
 #include "filesystem.h"
 #include "econ_item_description.h"				// only for CSteamAccountIDAttributeCollector
+#include "econ_game_account_server.h"
+
+#include "tf_gc_api.h"
 
 #ifdef CLIENT_DLL
 #include <igameevents.h>
@@ -187,6 +190,9 @@ void CInventoryManager::SteamRequestInventory( CPlayerInventory *pInventory, CSt
 //-----------------------------------------------------------------------------
 void CInventoryManager::GameServerSteamAPIActivated()
 {
+#if defined(TF_DLL) && defined(GAME_DLL)
+	GameCoordinator_NotifyGameState();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -329,6 +335,8 @@ void CInventoryManager::PreInitGC()
 	REG_SHARED_OBJECT_SUBCLASS( CSOTFLadderData );
 	REG_SHARED_OBJECT_SUBCLASS( CQuest );
 #endif
+
+	REG_SHARED_OBJECT_SUBCLASS(CEconGameAccountForGameServers);
 
 }
 

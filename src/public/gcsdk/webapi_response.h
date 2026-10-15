@@ -128,6 +128,10 @@ public:
 
 	~CWebAPIValues();
 
+#ifdef GC
+	// Gets the buffer pool used to reduce allocs in CWebAPIValues 
+	static CBufferPoolMT &GetBufferPool();
+#endif
 
 	//
 	// Child node handling

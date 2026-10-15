@@ -1281,6 +1281,8 @@ public:
 	void				SetPendingMerasmusPlayerBombExplode( void ){ m_bPendingMerasmusPlayerBombExplode = true; }
 
 private:
+	CNetworkVar(bool, m_bInPowerPlay);
+
 	// Achievement data
 	CUtlVector<EHANDLE> m_aPunchVictims;
 	CUtlVector<EHANDLE> m_aBurnFromBackAttackers;

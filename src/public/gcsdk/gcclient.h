@@ -61,6 +61,8 @@ public:
 	/// @see CGCClientSharedObjectCache::RemoveListener
 	bool RemoveSOCacheListener( const CSteamID &ownerID, ISharedObjectListener *pListener );
 
+	void OnGCMessageAvailable( GCMessageAvailable_t *pCallback );
+	ISteamGameCoordinator *GetSteamGameCoordinator() { return m_pSteamGameCoordinator; }
 
 	virtual void Test_AddEvent( CTestEvent *pEvent )	{}
 	virtual void Test_CacheSubscribed( const CSteamID & steamID ) {}
@@ -68,10 +70,6 @@ public:
 	void NotifySOCacheUnsubscribed( const CSteamID & ownerID );
 
 	void Dump();
-
-	// "subscribe" to a locally-loaded SO cache
-	CGCClientSharedObjectCache* AddLocalSOCache( const CSteamID& ownerID, void* pubData, uint32 cubData );	// should be a serialized CMsgSOCacheSubscribed
-	void RemoveLocalSOCache( CGCClientSharedObjectCache* pSOCache );
 
 #ifdef DBGFLAG_VALIDATE
 	static void ValidateStatics( CValidator &validator );
@@ -87,8 +85,15 @@ protected:
 	// Shared object caches
 	CUtlMap<CSteamID, CGCClientSharedObjectCache *> m_mapSOCache;
 
+	// Steam callback for getting notified about messages available. Not part of the class
+	// in Steam builds because we use the TestClientManager instead of steam_api.dll in Steam 
+#ifndef STEAM
+	CCallback< CGCClient, GCMessageAvailable_t, false > m_callbackGCMessageAvailable;
+#endif
 
 };
+
+
 } // namespace GCSDK
 
 #endif // GCCLIENT_H

@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2008, Valve Corporation, All rights reserved. =======
+//====== Copyright ?1996-2008, Valve Corporation, All rights reserved. =======
 //
 // Purpose: 
 //
@@ -79,6 +79,9 @@ S_API uint64 SteamGameServer_GetSteamID();
 //=============================================================================
 
 #ifndef STEAM_API_EXPORTS
+
+S_API ISteamClient* g_pSteamClientGameServer;
+
 // This function must be declared inline in the header so the module using steam_api.dll gets the version names they want.
 inline bool CSteamGameServerAPIContext::Init()
 {

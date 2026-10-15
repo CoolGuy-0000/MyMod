@@ -78,6 +78,18 @@ inline const char *GameServerAccount_GetStandingTrendString( eGameServerScoreSta
 //---------------------------------------------------------------------------------
 class CEconGameAccountForGameServers : public GCSDK::CProtoBufSharedObject < CSOEconGameAccountForGameServers, k_EEconTypeGameAccountForGameServers >
 {
+private: static CUtlMemoryPool sm_classMemPool; 
+public: 
+	static void* operator new (size_t nSize) { return ::operator new(nSize); } 
+	static void* operator new (size_t nSize, int nBlockUse, const char* pFileName, int nLine) {return ::operator new(nSize); } 
+	
+	static void operator delete (void* pMem) { ::operator delete(pMem); }
+
+	static void DumpMemStats(IDisplayMemPoolStats* pDisplayer) {
+		return;
+	}
+public:
+	virtual bool BIsDatabaseBacked() const { return false; }
 };
 
 #endif //ECON_GAME_SERVER_ACCOUNT_H

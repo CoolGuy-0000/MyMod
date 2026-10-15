@@ -150,3 +150,8 @@ $Project "vvis_launcher"
 	"utils\vvis_launcher\vvis_launcher.vpc" [$WINDOWS]
 }
 
+$Project "gcsdk_gc"
+{
+	"gcsdk\gcsdk_game.vpc" [$WINDOWS]
+}
+

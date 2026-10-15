@@ -37,6 +37,7 @@
 #include "steam/steamclientpublic.h"
 #include "misc.h"
 #include "steam/isteamclient.h"
+#include "steam/isteamgamecoordinator.h"
 #include "steam/steam_api.h"
 
 // stuff to include early because it is widely depended on
@@ -58,6 +59,7 @@
 #include "gcclient_sharedobjectcache.h"
 #include "gcclient.h"
 #include "gcclientjob.h"
+#include "gcsystemmsgs.h"
 
 #include "webapi_response.h"
 

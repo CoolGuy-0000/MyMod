@@ -176,7 +176,7 @@ PRECACHE_REGISTER( tank_boss );
 
 IMPLEMENT_SERVERCLASS_ST( CTFTankBoss, DT_TFTankBoss)
 	//SendPropVector(SENDINFO(m_StartColor), 8, 0, 0, 1),
-	SendPropStringT(SENDINFO(m_iszClassIcon))
+//	SendPropStringT(SENDINFO(m_iszClassIcon))
 END_SEND_TABLE()
 
 
@@ -523,7 +523,7 @@ void CTFTankBoss::UpdateOnRemove( void )
 
 	if ( TFObjectiveResource() )
 	{
-		TFObjectiveResource()->DecrementMannVsMachineWaveClassCount( GetClassIconName(), MVM_CLASS_FLAG_NORMAL | MVM_CLASS_FLAG_MINIBOSS);
+//		TFObjectiveResource()->DecrementMannVsMachineWaveClassCount( GetClassIconName(), MVM_CLASS_FLAG_NORMAL | MVM_CLASS_FLAG_MINIBOSS);
 	}
 
 	BaseClass::UpdateOnRemove();

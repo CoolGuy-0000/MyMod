@@ -4313,7 +4313,7 @@ void CTFGCServerSystem::OnWebapiEquipmentReceived( CSteamID steamID, HTTPRequest
 			return;
 		}
 
-		CGCClientSharedObjectCache *pSOCache = GetGCClient()->AddLocalSOCache( steamID, bufMsgSubscription.Base(), bufMsgSubscription.TellPut() );
+		CGCClientSharedObjectCache* pSOCache = NULL; //GetGCClient()->AddLocalSOCache( steamID, bufMsgSubscription.Base(), bufMsgSubscription.TellPut() );
 		if ( !pSOCache )
 		{
 			Warning( "Inventory response failed to create SO cache (probably protobuf didn't parse)\n" );

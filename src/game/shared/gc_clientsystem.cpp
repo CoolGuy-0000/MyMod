@@ -247,8 +247,32 @@ void CGCClientSystem::InitGC()
 	if ( m_bInittedGC )
 		return;
 
-	m_GCClient.BInit( nullptr );
-	m_bInittedGC = true;
+	// Locate our steam client interface.
+#ifdef CLIENT_DLL
+	ISteamClient* pSteamClient = SteamClient();
+	HSteamUser hSteamUser = SteamAPI_GetHSteamUser();
+	HSteamPipe hSteamPipe = SteamAPI_GetHSteamPipe();
+#else
+	ISteamClient* pSteamClient = SteamGameServerClient();
+	HSteamUser hSteamUser = SteamGameServer_GetHSteamUser();
+	HSteamPipe hSteamPipe = SteamGameServer_GetHSteamPipe();
+#endif
+	if (pSteamClient == NULL)
+	{
+		Warning("CGCClientSystem - no ISteamClient interface!\n");
+		Assert(pSteamClient);
+		return;
+	}
+	// Get the SteamGameCoordinator and initialize the GCClient
+	void* pGenericInterface = pSteamClient->GetISteamGenericInterface(hSteamUser, hSteamPipe, "SteamGameCoordinator001");
+
+	ISteamGameCoordinator* pGameCoordinator = static_cast<ISteamGameCoordinator*>(pGenericInterface);
+	if (pGameCoordinator)
+	{
+		m_GCClient.BInit(pGameCoordinator); //Valve doesn't code it damn...
+		// Initialized the GCClient
+		m_bInittedGC = true;
+	}
 }
 
 
@@ -288,11 +312,39 @@ void CGCClientSystem::ThinkConnection()
 			// Re-init logon
 			m_bLoggedOn = true;
 
-			m_timeLastSendHello = -999.9;
+			m_timeLastSendHello = 2.0f;
 			SetupGC();
 		}
 
+		if (!m_bConnectedToGC)
+		{
+			if (m_timeLastSendHello < Plat_FloatTime() - k_flClientHelloRetry)
+			{
+				m_timeLastSendHello = Plat_FloatTime();
 
+#ifdef CLIENT_DLL
+				GCSDK::CProtoBufMsg<CMsgClientHello> msg(k_EMsgGCClientHello);
+				msg.Body().set_version(engine->GetClientVersion());
+
+				//CGCClientSharedObjectCache *pSOCache = m_GCClient.FindSOCache( ClientSteamContext().GetLocalPlayerSteamID(), false );
+				//if ( pSOCache != NULL && pSOCache->BIsInitialized() )
+				//{
+				//	msg.Body().set_socache_version( pSOCache->GetVersion() );
+				//}
+
+#else
+				GCSDK::CProtoBufMsg<CMsgServerHello> msg(4007 /*k_EMsgGCServerHello*/);
+				msg.Body().set_version(engine->GetServerVersion());
+
+				//CGCClientSharedObjectCache *pSOCache = m_GCClient.FindSOCache( steamgameserverapicontext->SteamGameServer()->GetSteamID(), false );
+				//if ( pSOCache != NULL && pSOCache->BIsInitialized() )
+				//{
+				//	msg.Body().set_socache_version( pSOCache->GetVersion() );
+				//}
+#endif
+				BSendMessage(msg);
+			}
+		}
 	}
 	else
 	{

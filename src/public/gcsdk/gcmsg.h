@@ -69,6 +69,9 @@ struct ProtoBufMsgHeader_t
 //-----------------------------------------------------------------------------
 class CStructNetPacket : public IMsgNetPacket
 {
+#ifdef GC
+	DECLARE_CLASS_MEMPOOL( CStructNetPacket );
+#endif
 
 public:
 	CStructNetPacket( CNetPacket *pNetPacket )

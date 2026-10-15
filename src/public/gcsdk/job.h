@@ -159,14 +159,12 @@ public:
 	bool _BAcquireLockImmediate( CLock *pLock, const char *filename = "unknown", int line = 0 );
 	void _ReleaseLock( CLock *pLock, bool bForce = false, const char *filename = "unknown", int line = 0 );
 	bool BHoldsAnyLocks() const { return m_vecLocks.Count() > 0; }
-	int  GetLockCount() const { return m_vecLocks.Count(); }
 	void ReleaseLocks();
 
-	/// If we hold any locks, spew about them and optionally release them.
+	/// If we hold any locks, spew about them and release them.
 	/// This is useful for long running jobs, to make sure they don't leak
 	/// locks that never get cleaned up
-	void ShouldNotHoldAnyLocks( bool bReleaseLocks = true );
-
+	void ShouldNotHoldAnyLocks();
 
 	// --- general methods for waiting for events
 	// Simple yield to other jobs until Run() called again
@@ -181,6 +179,11 @@ public:
 	bool BYieldingWaitForMsg( CGCMsgBase *pMsg, MsgType_t eMsg );
 	bool BYieldingWaitForMsg( CProtoBufMsgBase *pMsg, MsgType_t eMsg );
 
+#ifdef GC
+	bool BYieldingWaitForMsg( CGCMsgBase *pMsg, MsgType_t eMsg, const CSteamID &expectedID );
+	bool BYieldingWaitForMsg( CProtoBufMsgBase *pMsg, MsgType_t eMsg, const CSteamID &expectedID );
+	bool BYieldingRunQuery( CGCSQLQueryGroup *pQueryGroup, ESchemaCatalog eSchemaCatalog );
+#endif
 
 	bool BYieldingWaitTimeWithLimit( uint32 cMicrosecondsToSleep, CJobTime &stimeStarted, int64 nMicroSecLimit );
 	bool BYieldingWaitTimeWithLimitRealTime( uint32 cMicrosecondsToSleep, int nSecLimit );

@@ -36,6 +36,9 @@ namespace GCSDK
 //-----------------------------------------------------------------------------
 class CProtoBufNetPacket : public IMsgNetPacket
 {
+#ifdef GC
+	DECLARE_CLASS_MEMPOOL( CProtoBufNetPacket );
+#endif
 
 public:
 	CProtoBufNetPacket( CNetPacket *pNetPacket, GCProtoBufMsgSrc eReplyType, const CSteamID steamID, uint32 nGCDirIndex, MsgType_t msgType );
@@ -101,7 +104,6 @@ public:
 
 	virtual ~CProtoBufMsgBase();
 
-	bool BIsInitialized() const;
 	bool InitFromPacket( IMsgNetPacket * pNetPacket );
 	bool BAsyncSend( IProtoBufSendHandler & pSender ) const;
 	bool BAsyncSendWithPreSerializedBody( IProtoBufSendHandler & pSender, const byte *pubBody, uint32 cubBody ) const;
@@ -377,8 +379,8 @@ public:
 		VPROF_BUDGET( "CProtoBufMsg::CProtoBufMsg( MsgType_t, CSteamID, int32 )", VPROF_BUDGETGROUP_OTHER_NETWORKING );
 
 		m_pProtoBufBody = AllocProto();
-		Hdr().set_client_steam_id( steamIDClient.ConvertToUint64() );
-		Hdr().set_client_session_id( nSessionIDClient );
+		Hdr()->set_client_steam_id( steamIDClient.ConvertToUint64() );
+		Hdr()->set_client_session_id( nSessionIDClient );
 	}
 
 	// Constructor from an incoming netpacket

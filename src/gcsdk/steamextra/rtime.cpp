@@ -326,6 +326,12 @@ const char* CRTime::Render( char (&buf)[k_RTimeRenderBufferSize] ) const
 //-----------------------------------------------------------------------------
 const char* CRTime::Render( const RTime32 rTime32, char (&buf)[k_RTimeRenderBufferSize] )
 {
+	if ( !buf )
+	{
+		Assert( buf );
+		return nullptr;
+	}
+
 	// The return value string contains exactly 26 characters and has the form:	Wed Jan 02 02:03:55 1980\n\0
 	time_t tTime = rTime32;
 	char pchTime[32];
@@ -657,6 +663,12 @@ RTime32 CRTime::RTime32FromRFC3339UTCString( const char* pchValue )
 // STATIC
 const char* CRTime::RTime32ToRFC3339UTCString( const RTime32 rTime32, char (&buf)[k_RTimeRenderBufferSize] )
 {
+	if ( !buf )
+	{
+		Assert( buf );
+		return nullptr;
+	}
+
 	// Store the result in a temporary buffer, so that you can use several in a single printf.
 	time_t tTime = rTime32; 
 	struct tm tmStruct;
@@ -734,6 +746,11 @@ RTime32 CRTime::RTime32FromString( const char* pszValue )
 // STATIC
 const char* CRTime::RTime32ToString( const RTime32 rTime32, char (&buf)[k_RTimeRenderBufferSize], bool bNoPunct /*=false*/, bool bOnlyDate /*= false*/ )
 {
+	if ( !buf )
+	{
+		return nullptr;
+	}
+
 	// Store the result in a temporary buffer, so that you can use several in a single printf.
 	time_t tTime = rTime32; 
 	struct tm tmStruct;
@@ -775,6 +792,11 @@ const char* CRTime::RTime32ToString( const RTime32 rTime32, char (&buf)[k_RTimeR
 // STATIC
 const char* CRTime::RTime32ToDayString( const RTime32 rTime32, char (&buf)[k_RTimeRenderBufferSize], bool bGMT )
 {
+	if ( !buf )
+	{
+		return nullptr;
+	}
+
 	// Store the result in a temporary buffer, so that you can use several in a single printf.
 	time_t tTime = rTime32; 
 	struct tm tmStruct;

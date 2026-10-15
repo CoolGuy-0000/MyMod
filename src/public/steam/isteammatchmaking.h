@@ -13,6 +13,7 @@
 #include "steam_api_common.h"
 #include "matchmakingtypes.h" 
 #include "isteamfriends.h"
+#include "steamtypes.h"
 
 // lobby type description
 enum ELobbyType

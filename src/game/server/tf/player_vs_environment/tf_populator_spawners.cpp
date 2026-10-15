@@ -1456,7 +1456,7 @@ bool CTankSpawner::Spawn( const Vector &here, EntityHandleVector_t *result )
 
 		tank->DefineOnKilledOutput( m_onKilledOutput );
 		tank->DefineOnBombDroppedOutput( m_onBombDroppedOutput );
-		tank->SetClassIconName( GetClassIcon() );
+//		tank->SetClassIconName( GetClassIcon() );
 
 		if ( result )
 		{

@@ -13,7 +13,9 @@
 #include "google/protobuf/descriptor.h"
 #include "tier1/KeyValues.h"
 
-
+#if defined( GC ) && defined( DEBUG )
+#include "gcbase.h"
+#endif
 
 namespace google
 {
@@ -30,7 +32,7 @@ bool IsProtoBufFieldLess( const ::google::protobuf::Message & msgLHS,
 						  const ::google::protobuf::Message & msgRHS,
 						  const ::google::protobuf::FieldDescriptor *pFieldLHS,
 						  const ::google::protobuf::FieldDescriptor *pFieldRHS );
-
+						  
 //----------------------------------------------------------------------------
 // Purpose: Base class for CProtoBufSharedObject. This is where all the actual
 //			code lives.
@@ -52,6 +54,17 @@ public:
 	virtual void Validate( CValidator &validator, const char *pchName );
 #endif
 
+#ifdef GC
+	virtual bool BAddToMessage( CUtlBuffer & bufOutput ) const OVERRIDE;
+	virtual bool BAddToMessage( std::string *pBuffer ) const OVERRIDE;
+	virtual bool BAddDestroyToMessage( CUtlBuffer & bufDestroy ) const OVERRIDE;
+	virtual bool BAddDestroyToMessage( std::string *pBuffer ) const OVERRIDE;
+
+	virtual bool BParseFromMemcached( CUtlBuffer & buffer ) OVERRIDE;
+	virtual bool BAddToMemcached( CUtlBuffer & bufOutput ) const OVERRIDE;
+
+	static bool SerializeToBuffer( const ::google::protobuf::Message & msg, CUtlBuffer & bufOutput );
+#endif //GC
 
 	// Static helpers
 	static void Dump( const ::google::protobuf::Message & msg );
@@ -63,6 +76,9 @@ protected:
 	const ::google::protobuf::Message *GetPObject() const { return const_cast<CProtoBufSharedObjectBase *>(this)->GetPObject(); }
 
 private:
+#ifdef GC
+	static ::google::protobuf::Message *BuildDestroyToMessage( const ::google::protobuf::Message & msg );
+#endif //GC
 
 };
 
@@ -77,6 +93,10 @@ class CProtoBufSharedObject : public CProtoBufSharedObjectBase
 public:
 	~CProtoBufSharedObject()
 	{
+#if defined( GC ) && defined( DEBUG )
+		// Ensure this SO is not in any cache, or we have an error. We must provide the type since it is a virutal function otherwise
+		Assert( !GGCBase()->IsSOCached( this, nTypeID ) );
+#endif
 	}
 
 	virtual int GetTypeID() const { return nTypeID; }
@@ -94,6 +114,7 @@ public:
 
 	typedef Message_t SchObjectType_t;
 	const static int k_nTypeID = nTypeID;
+
 protected:
 	template< typename T = Message_t >
 		Protected_Message_t<T> MutObj() { return m_msgObject; }
@@ -103,8 +124,6 @@ protected:
 private:
 	Message_t m_msgObject;
 };
-
-
 
 //----------------------------------------------------------------------------
 // Purpose: Template for making a shared object that uses a specific protobuf
@@ -124,6 +143,10 @@ public:
 
 	~CProtoBufSharedObjectWrapper()
 	{
+#if defined( GC ) && defined( DEBUG )
+		// Ensure this SO is not in any cache, or we have an error. We must provide the type since it is a virutal function otherwise
+		Assert( !GGCBase()->IsSOCached( this, nTypeID ) );
+#endif
 	}
 
 	virtual int GetTypeID() const { return nTypeID; }

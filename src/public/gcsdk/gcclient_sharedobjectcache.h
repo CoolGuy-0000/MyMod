@@ -216,7 +216,7 @@ public:
 	CGCClientSharedObjectTypeCache *FindTypeCache( int nClassID ) { return (CGCClientSharedObjectTypeCache *)FindBaseTypeCache( nClassID ); }
 	CGCClientSharedObjectTypeCache *CreateTypeCache( int nClassID ) { return (CGCClientSharedObjectTypeCache *)CreateBaseTypeCache( nClassID ); }
 
-	bool BParseCacheSubscribedMsg( const CMsgSOCacheSubscribed & msg, bool bLocal = false );
+	bool BParseCacheSubscribedMsg( const CMsgSOCacheSubscribed & msg );
 	void NotifyUnsubscribe();
 	void NotifyResubscribedUpToDate();
 
@@ -228,8 +228,6 @@ public:
 	virtual void Validate( CValidator &validator, const char *pchName );
 #endif
 
-	bool BIsLocal() const { return m_bLocal; }
-
 protected:
 private:
 	virtual CSharedObjectTypeCache *AllocateTypeCache( int nClassID ) const OVERRIDE { return new CGCClientSharedObjectTypeCache( nClassID, m_context ); }
@@ -238,7 +236,6 @@ private:
 	CGCClientSharedObjectContext m_context;
 	bool m_bInitialized;
 	bool m_bSubscribed;
-	bool m_bLocal; // Not subscribed via the GC
 };
 
 

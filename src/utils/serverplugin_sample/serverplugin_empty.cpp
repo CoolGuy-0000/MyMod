@@ -7,6 +7,8 @@
 //===========================================================================//
 
 #include <stdio.h>
+#include <fstream>
+#include <iomanip>
 
 //#define GAME_DLL
 #ifdef GAME_DLL
@@ -28,6 +30,7 @@
 #include "game/server/iplayerinfo.h"
 #include "game/server/ientityinfo.h"
 #include "game/server/igameinfo.h"
+#include "server_class.h"
 
 //#define SAMPLE_TF2_PLUGIN
 #ifdef SAMPLE_TF2_PLUGIN
@@ -38,23 +41,12 @@
 
 // Interfaces from the engine
 IVEngineServer	*engine = NULL; // helper functions (messaging clients, loading content, making entities, running commands, etc)
-IGameEventManager *gameeventmanager_ = NULL; // game events interface
-#ifndef GAME_DLL
-#define gameeventmanager gameeventmanager_
-#endif
 IPlayerInfoManager *playerinfomanager = NULL; // game dll interface to interact with players
 IEntityInfoManager *entityinfomanager = NULL; // game dll interface to interact with all entities (like IPlayerInfo)
 IGameInfoManager *gameinfomanager = NULL; // game dll interface to get data from game rules directly
-IBotManager *botmanager = NULL; // game dll interface to interact with bots
-IServerPluginHelpers *helpers = NULL; // special 3rd party plugin helpers from the engine
-IUniformRandomStream *randomStr = NULL;
-IEngineTrace *enginetrace = NULL;
-
+IServerGameDLL* server_dll = NULL;
 
 CGlobalVars *gpGlobals = NULL;
-
-// function to initialize any cvars/command in this plugin
-void Bot_RunAll( void ); 
 
 // useful helper func
 #ifndef GAME_DLL
@@ -140,12 +132,6 @@ bool CEmptyServerPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfa
 	{
 		Warning( "Unable to load playerinfomanager, ignoring\n" ); // this isn't fatal, we just won't be able to access specific player data
 	}
-
-	botmanager = (IBotManager *)gameServerFactory(INTERFACEVERSION_PLAYERBOTMANAGER, NULL);
-	if ( !botmanager )
-	{
-		Warning( "Unable to load botcontroller, ignoring\n" ); // this isn't fatal, we just won't be able to access specific bot functions
-	}
 	gameinfomanager = (IGameInfoManager *)gameServerFactory(INTERFACEVERSION_GAMEINFOMANAGER, NULL);
 	if (!gameinfomanager)
 	{
@@ -153,16 +139,7 @@ bool CEmptyServerPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfa
 	}
 
 	engine = (IVEngineServer*)interfaceFactory(INTERFACEVERSION_VENGINESERVER, NULL);
-	gameeventmanager = (IGameEventManager *)interfaceFactory(INTERFACEVERSION_GAMEEVENTSMANAGER,NULL);
-	helpers = (IServerPluginHelpers*)interfaceFactory(INTERFACEVERSION_ISERVERPLUGINHELPERS, NULL);
-	enginetrace = (IEngineTrace *)interfaceFactory(INTERFACEVERSION_ENGINETRACE_SERVER,NULL);
-	randomStr = (IUniformRandomStream *)interfaceFactory(VENGINE_SERVER_RANDOM_INTERFACE_VERSION, NULL);
-
-	// get the interfaces we want to use
-	if(	! ( engine && gameeventmanager && g_pFullFileSystem && helpers && enginetrace && randomStr ) )
-	{
-		return false; // we require all these interface to function
-	}
+	server_dll = (IServerGameDLL*)gameServerFactory(INTERFACEVERSION_SERVERGAMEDLL, NULL);
 
 	if ( playerinfomanager )
 	{
@@ -171,6 +148,41 @@ bool CEmptyServerPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfa
 
 	MathLib_Init( 2.2f, 2.2f, 0.0f, 2.0f );
 	ConVar_Register( 0 );
+
+	
+	std::ofstream outFile("server_classes_dump.txt");
+	if (!outFile.is_open())
+	{
+		Msg("Failed to open file for dumping server classes!\n");
+		return false;
+	}
+
+	ServerClass* sc = server_dll->GetAllServerClasses();
+	int nTables = 0;
+
+	for (ServerClass* pCur = sc; pCur; pCur = pCur->m_pNext)
+	{
+		SendTable* table = pCur->m_pTable;
+
+		// 파일에 클래스 정보 기록
+		outFile << "Class: " << pCur->GetName() << " (" << table->GetName() << ") - props: " << table->GetNumProps() << "\n";
+
+		for (int iProp = 0; iProp < table->GetNumProps(); iProp++) {
+			SendProp* prop = &table->m_pProps[iProp];
+
+			// 기존 %X (%X 형식의 16진수 오프셋)를 맞추기 위해 std::hex와 std::uppercase 사용
+			outFile << "[Type:" << prop->GetType()
+				<< "][Flags:" << prop->GetFlags()
+				<< "][Offs:" << std::hex << std::uppercase << prop->GetOffset() << std::dec << "]"
+				<< " " << prop->GetName() << "\n";
+		}
+
+		++nTables;
+	}
+
+	outFile << "Total Classes: " << nTables << "\n";
+	outFile.close(); // 파일 닫기
+
 	return true;
 }
 
@@ -179,8 +191,6 @@ bool CEmptyServerPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfa
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::Unload( void )
 {
-	gameeventmanager->RemoveListener( this ); // make sure we are unloaded from the event system
-
 	ConVar_Unregister( );
 	DisconnectTier2Libraries( );
 	DisconnectTier1Libraries( );
@@ -213,8 +223,6 @@ const char *CEmptyServerPlugin::GetPluginDescription( void )
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::LevelInit( char const *pMapName )
 {
-	Msg( "Level \"%s\" has been loaded\n", pMapName );
-	gameeventmanager->AddListener( this, true );
 }
 
 //---------------------------------------------------------------------------------
@@ -230,10 +238,6 @@ void CEmptyServerPlugin::ServerActivate( edict_t *pEdictList, int edictCount, in
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::GameFrame( bool simulating )
 {
-	if ( simulating )
-	{
-		Bot_RunAll();
-	}
 }
 
 //---------------------------------------------------------------------------------
@@ -241,7 +245,6 @@ void CEmptyServerPlugin::GameFrame( bool simulating )
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::LevelShutdown( void ) // !!!!this can get called multiple times per map change
 {
-	gameeventmanager->RemoveListener( this );
 }
 
 //---------------------------------------------------------------------------------
@@ -263,14 +266,6 @@ void CEmptyServerPlugin::ClientDisconnect( edict_t *pEntity )
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::ClientPutInServer( edict_t *pEntity, char const *playername )
 {
-	KeyValues *kv = new KeyValues( "msg" );
-	kv->SetString( "title", "Hello" );
-	kv->SetString( "msg", "Hello there" );
-	kv->SetColor( "color", Color( 255, 0, 0, 255 ));
-	kv->SetInt( "level", 5);
-	kv->SetInt( "time", 10);
-	helpers->CreateMessage( pEntity, DIALOG_MSG, kv, this );
-	kv->deleteThis();
 }
 
 //---------------------------------------------------------------------------------
@@ -321,33 +316,6 @@ void CEmptyServerPlugin::ClientSettingsChanged( edict_t *pEdict )
 PLUGIN_RESULT CEmptyServerPlugin::ClientConnect( bool *bAllowConnect, edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen )
 {
 	return PLUGIN_CONTINUE;
-}
-
-CON_COMMAND( DoAskConnect, "Server plugin example of using the ask connect dialog" )
-{
-	if ( args.ArgC() < 2 )
-	{
-		Warning ( "DoAskConnect <server IP>\n" );
-	}
-	else
-	{
-		const char *pServerIP = args.Arg( 1 );
-
-		KeyValues *kv = new KeyValues( "menu" );
-		kv->SetString( "title", pServerIP );	// The IP address of the server to connect to goes in the "title" field.
-		kv->SetInt( "time", 3 );
-
-		for ( int i=1; i < gpGlobals->maxClients; i++ )
-		{
-			edict_t *pEdict = engine->PEntityOfEntIndex( i );
-			if ( pEdict )
-			{
-				helpers->CreateMessage( pEdict, DIALOG_ASKCONNECT, kv, &g_EmtpyServerPlugin );
-			}
-		}
-
-		kv->deleteThis();
-	}
 }
 
 #ifdef SAMPLE_TF2_PLUGIN
@@ -718,157 +686,6 @@ void FlagStatus( edict_t *pPlayer )
 //---------------------------------------------------------------------------------
 PLUGIN_RESULT CEmptyServerPlugin::ClientCommand( edict_t *pEntity, const CCommand &args )
 {
-	const char *pcmd = args[0];
-
-	if ( !pEntity || pEntity->IsFree() ) 
-	{
-		return PLUGIN_CONTINUE;
-	}
-
-	if ( FStrEq( pcmd, "menu" ) )
-	{
-		KeyValues *kv = new KeyValues( "menu" );
-		kv->SetString( "title", "You've got options, hit ESC" );
-		kv->SetInt( "level", 1 );
-		kv->SetColor( "color", Color( 255, 0, 0, 255 ));
-		kv->SetInt( "time", 20 );
-		kv->SetString( "msg", "Pick an option\nOr don't." );
-		
-		for( int i = 1; i < 9; i++ )
-		{
-			char num[10], msg[10], cmd[10];
-			Q_snprintf( num, sizeof(num), "%i", i );
-			Q_snprintf( msg, sizeof(msg), "Option %i", i );
-			Q_snprintf( cmd, sizeof(cmd), "option%i", i );
-
-			KeyValues *item1 = kv->FindKey( num, true );
-			item1->SetString( "msg", msg );
-			item1->SetString( "command", cmd );
-		}
-
-		helpers->CreateMessage( pEntity, DIALOG_MENU, kv, this );
-		kv->deleteThis();
-		return PLUGIN_STOP; // we handled this function
-	}
-	else if ( FStrEq( pcmd, "rich" ) )
-	{
-		KeyValues *kv = new KeyValues( "menu" );
-		kv->SetString( "title", "A rich message" );
-		kv->SetInt( "level", 1 );
-		kv->SetInt( "time", 20 );
-		kv->SetString( "msg", "This is a long long long text string.\n\nIt also has line breaks." );
-		
-		helpers->CreateMessage( pEntity, DIALOG_TEXT, kv, this );
-		kv->deleteThis();
-		return PLUGIN_STOP; // we handled this function
-	}
-	else if ( FStrEq( pcmd, "msg" ) )
-	{
-		KeyValues *kv = new KeyValues( "menu" );
-		kv->SetString( "title", "Just a simple hello" );
-		kv->SetInt( "level", 1 );
-		kv->SetInt( "time", 20 );
-		
-		helpers->CreateMessage( pEntity, DIALOG_MSG, kv, this );
-		kv->deleteThis();
-		return PLUGIN_STOP; // we handled this function
-	}
-	else if ( FStrEq( pcmd, "entry" ) )
-	{
-		KeyValues *kv = new KeyValues( "entry" );
-		kv->SetString( "title", "Stuff" );
-		kv->SetString( "msg", "Enter something" );
-		kv->SetString( "command", "say" ); // anything they enter into the dialog turns into a say command
-		kv->SetInt( "level", 1 );
-		kv->SetInt( "time", 20 );
-		
-		helpers->CreateMessage( pEntity, DIALOG_ENTRY, kv, this );
-		kv->deleteThis();
-		return PLUGIN_STOP; // we handled this function		
-	}
-#ifdef SAMPLE_TF2_PLUGIN
-	else if ( FStrEq( pcmd, "gameinfo" ) )
-	{
-		IGameInfo *gameInfo = gameinfomanager->GetGameInfo();
-		if (!gameInfo)
-			return PLUGIN_STOP;
-
-		Msg("=== Game Information ===\n");
-		Msg("Game Type: %i / %s\n", gameInfo->GetInfo_GameType(), gameInfo->GetInfo_GameTypeName() );
-		int teamCount = gameInfo->GetInfo_GetTeamCount();
-		Msg("Num Teams: %i\n", teamCount );
-
-		Msg("Player Counts:\n");
-		for (int i = 0;i<teamCount;i++)
-		{
-			//If this failes, we can assume the rest is invalid too.
-			if (!gameInfo->GetInfo_GetTeamName(i) )
-				continue;
-			Msg("Team: %s, Players: %i\n", gameInfo->GetInfo_GetTeamName(i), gameInfo->GetInfo_NumPlayersOnTeam(i) );
-		}
-		return PLUGIN_STOP;
-
-	}
-	// Sample to use the new CustomInfo added to TF2 for plugins
-	else if ( FStrEq( pcmd, "tfcond" ) )
-	{
-		IPlayerInfo *playerinfo = playerinfomanager->GetPlayerInfo( pEntity );
-		if (!playerinfo)
-			return PLUGIN_STOP;
-
-		pluginvariant conditionValue;
-		pluginvariant emptyVariant;
-		if (!playerinfo->GetCustomInfo(TFPLAYERINFO_CONDITIONS, conditionValue, emptyVariant))
-		{
-			Msg("unable to retrieve conditions!\n");
-			return PLUGIN_STOP;
-		}
-
-		Msg("Disguising?: %s\n", TFPlayerHasCondition(conditionValue.Int(), TF_COND_DISGUISING ) ? "yes" : "no" );
-		Msg("Disguised?: %s\n", TFPlayerHasCondition(conditionValue.Int(), TF_COND_DISGUISED ) ? "yes" : "no" );
-		Msg("Stealthed?: %s\n", TFPlayerHasCondition(conditionValue.Int(), TF_COND_STEALTHED ) ? "yes" : "no" );
-		Msg("Invulnerable?: %s\n", TFPlayerHasCondition(conditionValue.Int(), TF_COND_INVULNERABLE ) ? "yes" : "no" );
-		Msg("Teleported Recently?: %s\n", TFPlayerHasCondition(conditionValue.Int(), TF_COND_TELEPORTED ) ? "yes" : "no" );
-		Msg("Selected for Teleportation?: %s\n", TFPlayerHasCondition(conditionValue.Int(), TF_COND_SELECTED_TO_TELEPORT ) ? "yes" : "no" );
-		Msg("On Fire?: %s\n", TFPlayerHasCondition(conditionValue.Int(), TF_COND_BURNING ) ? "yes" : "no" );
-
-		return PLUGIN_STOP;
-	}
-	else if ( FStrEq( pcmd, "sentry_status" ) )
-	{
-		SentryStatus(pEntity);
-		return PLUGIN_STOP;
-	}
-	else if ( FStrEq( pcmd, "class_status" ) )
-	{
-		ClassStatus(pEntity);
-		return PLUGIN_STOP;
-	}
-	else if ( FStrEq( pcmd, "flag_status" ) )
-	{
-		FlagStatus(pEntity);
-		return PLUGIN_STOP;
-	}
-	#ifdef GAME_DLL
-		else if ( FStrEq( pcmd, "cbe_test" ) )
-		{
-			IPlayerInfo *playerinfo = playerinfomanager->GetPlayerInfo( pEntity );
-			if (!playerinfo)
-				return PLUGIN_STOP;
-
-			CBaseEntity *pEnt = static_cast< CBaseEntity* >(entityinfomanager->GetEntity( pEntity ));
-			if (pEnt)
-				Msg("got a pointer to CBaseEntity..\n");
-			Msg("attempting to print this entities modelname directly..\n");
-
-			Msg("ModelName: %s\n", STRING(pEnt->GetModelName()) );
-
-			return PLUGIN_STOP;
-		}
-	#endif
-#endif
-
-
 	return PLUGIN_CONTINUE;
 }
 
@@ -885,7 +702,6 @@ PLUGIN_RESULT CEmptyServerPlugin::NetworkIDValidated( const char *pszUserName, c
 //---------------------------------------------------------------------------------
 void CEmptyServerPlugin::OnQueryCvarValueFinished( QueryCvarCookie_t iCookie, edict_t *pPlayerEntity, EQueryCvarValueStatus eStatus, const char *pCvarName, const char *pCvarValue )
 {
-	Msg( "Cvar query (cookie: %d, status: %d) - name: %s, value: %s\n", iCookie, eStatus, pCvarName, pCvarValue );
 }
 void CEmptyServerPlugin::OnEdictAllocated( edict_t *edict )
 {

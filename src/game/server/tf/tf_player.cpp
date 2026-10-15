@@ -814,6 +814,7 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayer, DT_TFPlayer )
 	SendPropFloat( SENDINFO( m_flVehicleReverseTime ) ),
 
 	SendPropFloat( SENDINFO( m_flMvMLastDamageTime ), 16, SPROP_ROUNDUP ),
+	SendPropBool(SENDINFO(m_bInPowerPlay)),
 	SendPropInt( SENDINFO( m_iSpawnCounter ) ),
 	SendPropBool( SENDINFO( m_bFlipViewModels ) ),
 	SendPropBool( SENDINFO( m_bArenaSpectator ) ),
