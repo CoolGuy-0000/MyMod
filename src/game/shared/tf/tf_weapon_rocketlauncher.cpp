@@ -334,7 +334,6 @@ CBaseEntity *CTFRocketLauncher::FireProjectile( CTFPlayer *pPlayer )
 		PlayUpgradedShootSound( "Weapon_Upgrade.DamageBonus" );
 	}
 
-
 	return pRocket;
 }
 

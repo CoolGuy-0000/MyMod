@@ -5,6 +5,7 @@
 #pragma once
 #endif
 
+
 #if !defined( _X360 ) && !defined( NO_STEAM )
 #include "steam/steam_api.h"
 #include "steam/steam_gameserver.h"
@@ -22,6 +23,8 @@
 #include "tf_gc_shared.h"
 #include "tf_lobby_shared.h"
 #include "vote_controller.h"
+
+
 
 class CTFGSLobby;
 class CTFParty;

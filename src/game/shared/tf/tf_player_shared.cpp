@@ -1878,8 +1878,7 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 	case TF_COND_HALLOWEEN_HELL_HEAL:
 		OnAddHalloweenHellHeal();
 		break;
-
-
+	
 	default:
 		break;
 	}
@@ -2568,8 +2567,8 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 			// Cap it to the max we'll boost a player's health
 			nHealthToAdd = clamp( nHealthToAdd, 0, iBoostMax - m_pOuter->GetHealth() );
 			
-			m_pOuter->TakeHealth( nHealthToAdd, DMG_IGNORE_MAXHEALTH | DMG_IGNORE_DEBUFFS );
-			
+			m_pOuter->TakeHealth( nHealthToAdd, DMG_IGNORE_MAXHEALTH | DMG_IGNORE_DEBUFFS );			
+
 			m_pOuter->AdjustDrownDmg( -1.0 * nHealthToAdd ); // subtract this from the drowndmg in case they're drowning and being healed at the same time
 
 			// split up total healing based on the amount each healer contributes
@@ -3064,6 +3063,7 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 			RemoveCond( TF_COND_BLEEDING );
 		}
 	}
+
 
 	{
 		m_flSpyTranqBuffDuration = 0;
@@ -4431,6 +4431,7 @@ void CTFPlayerShared::OnRemoveSapped( void )
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::OnAddReprogrammed( void )
 {
+	m_pOuter->GetBaseEntity()->CBaseEntity::ChangeTeam(2);
 }
 
 //-----------------------------------------------------------------------------
@@ -4438,6 +4439,7 @@ void CTFPlayerShared::OnAddReprogrammed( void )
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::OnRemoveReprogrammed( void )
 {
+	m_pOuter->GetBaseEntity()->CBaseEntity::ChangeTeam(3);
 }
 
 void CTFPlayerShared::OnAddDisguisedAsDispenser( void )

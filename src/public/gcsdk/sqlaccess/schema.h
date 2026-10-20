@@ -11,6 +11,8 @@
 #pragma once
 #endif
 
+#include <KeyValues.h>
+
 namespace GCSDK
 {
 const int k_nColFlagIndexed =	 0x0001;		// this column is indexed.  

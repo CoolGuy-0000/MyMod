@@ -19985,7 +19985,7 @@ bool CTFPlayer::SpeakConceptIfAllowed( int iConcept, const char *modifiers, char
 		}
 	}
 
-	return bReturn;
+	return true;
 }
 
 //-----------------------------------------------------------------------------

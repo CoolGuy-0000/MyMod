@@ -783,7 +783,27 @@ static bool ParseDynamicAttributes( CTFBot::EventChangeAttributes_t& event, KeyV
 
 	return true;
 }
+static bool ParseAddcond(CUtlVector< CTFBotSpawner::CondList >& conds, KeyValues* data) {
 
+	if (Q_stricmp(data->GetName(), "AddCond") != 0)return false;
+
+	KeyValues* pName = data->FindKey("Name");
+
+	if (!pName)
+		return false;
+
+	ETFCond cond = GetTFConditionFromName(pName->GetString());
+
+	float duration = data->GetFloat("Duration", -1.0f);
+
+	CTFBotSpawner::CondList entry;
+	entry.cond = cond;
+	entry.duration = duration;
+
+	conds.AddToTail(entry);
+
+	return true;
+}
 //-----------------------------------------------------------------------
 bool CTFBotSpawner::Parse( KeyValues *values )
 {
@@ -846,7 +866,11 @@ bool CTFBotSpawner::Parse( KeyValues *values )
 		}
 		else if ( !Q_stricmp( name, "ClassIcon" ) )
 		{
-			m_iszClassIcon = AllocPooledString( value );
+			if (!Q_stricmp(value, "red2_lite")) {
+				m_iszClassIcon = AllocPooledString("pyro_flare");
+			}
+			else m_iszClassIcon = AllocPooledString( value );
+
 		}
 		else if ( !Q_stricmp( name, "Health" ) )
 		{
@@ -884,10 +908,12 @@ bool CTFBotSpawner::Parse( KeyValues *values )
 		{
 			// Do nothing on success
 		}
+		else if (ParseAddcond(m_conds, data)) {
+			// Do nothing on success
+		}
 		else
 		{
 			Warning( "TFBotSpawner: Unknown field '%s'\n", name );
-			return false;
 		}
 	}
 
@@ -1107,7 +1133,7 @@ bool CTFBotSpawner::Spawn( const Vector &rawHere, EntityHandleVector_t *result )
 
 		int team = TF_TEAM_RED;
 
-		if ( TFGameRules()->IsMannVsMachineMode() )
+		if ( TFGameRules()->IsMannVsMachineMode())
 		{
 			team = TF_TEAM_PVE_INVADERS;
 		}
@@ -1280,6 +1306,10 @@ bool CTFBotSpawner::Spawn( const Vector &rawHere, EntityHandleVector_t *result )
 					newBot->SetBloodColor( DONT_BLEED );
 				}
 			}
+		}
+		
+		FOR_EACH_VEC(m_conds, i) {
+			newBot->m_Shared.AddCond(m_conds[i].cond, m_conds[i].duration);
 		}
 
 		if ( result )

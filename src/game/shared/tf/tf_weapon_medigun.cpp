@@ -591,9 +591,9 @@ bool CWeaponMedigun::AllowedToHealTarget( CBaseEntity *pTarget )
 		bool bDisguised = pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED );
 
 		// We can heal teammates and enemies that are disguised as teammates
-		if ( !bStealthed && 
-			( pTFPlayer->InSameTeam( pOwner ) || 
-			( bDisguised && pTFPlayer->m_Shared.GetDisguiseTeam() == pOwner->GetTeamNumber() ) ) )
+		if ( !bStealthed ||
+			/*pTFPlayer->InSameTeam(pOwner)*/
+			( bDisguised && pTFPlayer->m_Shared.GetDisguiseTeam() == pOwner->GetTeamNumber() ) )
 		{
 			return true;
 		}

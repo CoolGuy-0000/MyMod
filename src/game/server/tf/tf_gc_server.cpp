@@ -1,11 +1,10 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 #include "cbase.h"
-
 #include "tf_gc_server.h"
-#include "gcsdk/gcsdk_auto.h"
 #include "tf_gcmessages.h"
+
 #include "tf_player.h"
-#include "rtime.h"
+
 // XXX(JohnS): Eventually, we want to send a smaller lobby object to clients. For now, they use the CTFGSLobby, which is
 //             in shared code for that reason.
 #include "tf_lobby_server.h"
@@ -1228,6 +1227,7 @@ public:
 };
 GC_REG_JOB( GCSDK::CGCClient, CGCCompetitiveDailyStatsRollupJob, "CGCCompetitiveDailyStatsRollupJob", k_EMsgGC_DailyCompetitiveStatsRollup_Response, k_EServerTypeGCClient );
 
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1314,10 +1314,12 @@ void CTFGCServerSystem::PreInitGC()
 
 	if ( !m_bSetupSchema )
 	{
+
 //		REG_SHARED_OBJECT_SUBCLASS( CDOTAHeroStandings );
 //		REG_SHARED_OBJECT_SUBCLASS( CDOTAGameAccountClient );
-		REG_SHARED_OBJECT_SUBCLASS( CTFGSLobby );
-		REG_SHARED_OBJECT_SUBCLASS( CTFParty );
+		REG_SHARED_OBJECT_SUBCLASS( CTFParty, 0);
+		REG_SHARED_OBJECT_SUBCLASS( CTFGSLobby, 0);		
+		REG_SHARED_OBJECT_SUBCLASS( CTFPartyInvite, 0);
 
 		m_bSetupSchema = true;
 	}
@@ -1477,6 +1479,7 @@ void CTFGCServerSystem::ClientDisconnected( CSteamID steamIDClient )
 	}
 }
 
+
 //-----------------------------------------------------------------------------
 void CTFGCServerSystem::PreClientUpdate( )
 {
@@ -1503,8 +1506,10 @@ void CTFGCServerSystem::PreClientUpdate( )
 	//
 	// Check for updating the caches that we're listening to
 	//
-	CSteamID const *pSteamID = engine->GetGameServerSteamID();
-	if ( pSteamID && m_ourSteamID != *pSteamID )
+
+	CSteamID const* pSteamID = engine->GetGameServerSteamID();
+
+	if (pSteamID && m_ourSteamID != *pSteamID)
 	{
 		Assert( pSteamID->BGameServerAccount() );
 
@@ -1522,6 +1527,7 @@ void CTFGCServerSystem::PreClientUpdate( )
 
 		// And start listening
 		GCClientSystem()->GetGCClient()->AddSOCacheListener( m_ourSteamID, this );
+
 	}
 
 	MatchPlayerAbandonThink();
@@ -2381,7 +2387,7 @@ CMatchInfo::PlayerMatchData_t *CTFGCServerSystem::GetLiveMatchPlayer( CSteamID s
 
 void CTFGCServerSystem::SOCreated( const CSteamID & steamIDOwner, const GCSDK::CSharedObject *pObject, GCSDK::ESOCacheEvent eEvent )
 {
-//	Msg( "CTFGCServerSystem::SOCreated type = %d owner = %s\n", pObject->GetTypeID(), steamIDOwner.Render() );
+	Msg( "CTFGCServerSystem::SOCreated type = %d owner = %s\n", pObject->GetTypeID(), steamIDOwner.Render() );
 
 	// Lobby handling
 	if ( pObject->GetTypeID() == CTFGSLobby::k_nTypeID )
@@ -2402,7 +2408,7 @@ void CTFGCServerSystem::SOCreated( const CSteamID & steamIDOwner, const GCSDK::C
 			// Delivered a new match lobby
 			MMLog( "  Map: '%s'\n", pLobby->GetMapName() );
 			MMLog( "  Mission: '%s'\n", pLobby->GetMissionName() );
-
+			
 			ETFMatchGroup eMatchGroup = (ETFMatchGroup)pLobby->Obj().match_group();
 
 			// Acknowledge the players that just connected.  (This will create
@@ -2789,7 +2795,7 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 	CUtlString sGameServerInfoMap;
 	CUtlString sGameServerInfoTags;
 	int nBotCountToSend = -1;
-	float flSendInterval = 60.0f;
+	float flSendInterval = 1.0f;
 	int nUnconnectedPlayerReservationRequests = 0;
 	bool bLobbyIncorrect = false;
 	CUtlVector<CSteamID> vecFailedLoaders;
@@ -2807,7 +2813,7 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 	};
 	CUtlVector< Reservation_t > vecReservationRequests;
 	CUtlVector<CSteamID> vecConnectedPlayers;
-	int nAdminSlots = 0;
+	int nAdminSlots = 1;
 	int nAdHocPlayers = 0;
 	int nMatchPlayers = 0;
 	int nBots = 0;
@@ -3394,7 +3400,7 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 		// *immediately*.  Also, because players come and go frequently (especially
 		// in PvP), having this timer avoids massive spam if tons of players all decide
 		// to leave at once.
-		flSendInterval = Min( flSendInterval, 10.0f );
+		flSendInterval = Min( flSendInterval, 4.0f);
 	}
 
 	// Check if we MUST send a message, no matter how recently we sent the last update.
@@ -3415,7 +3421,7 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 		     ( nMaxHumans != m_nLastGameServerUpdateMaxHumans ) ||
 		     ( nBotCountToSend != m_nLastGameServerUpdateBotCount ) )
 		{
-			flSendInterval = Min( flSendInterval, 20.0f );
+			flSendInterval = Min( flSendInterval, 4.0f);
 		}
 
 		// If lobby is incorrect in an ordinary way (player left, etc),
@@ -3424,7 +3430,7 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 		{
 			// Send updates more quickly if the GC hasn't acknowledged, but don't DDoS.  Ideally the event that made the
 			// lobby incorrect triggered a Update( bForce = true );
-			flSendInterval = Min( flSendInterval, 10.0f );
+			flSendInterval = Min( flSendInterval, 4.0f );
 		}
 
 		if ( now < m_timeLastSendGameServerInfoAndConnectedPlayers + flSendInterval )
@@ -3484,7 +3490,7 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 			msg.Body().set_mvm_wave( MannVsMachineStats_GetCurrentWave() );
 		}
 
-		ETFMatchGroup eCurrentGroup = k_eTFMatchGroup_Invalid;
+		ETFMatchGroup eCurrentGroup = k_eTFMatchGroup_Casual_Default;
 		if ( m_pMatchInfo )
 		{
 			eCurrentGroup = m_pMatchInfo->m_eMatchGroup;
@@ -3515,7 +3521,7 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 		     ( msg.Body().max_players() != (uint32)m_nLastGameServerUpdateMaxHumans ) ||
 		     ( msg.Body().bot_count() != (uint32)m_nLastGameServerUpdateBotCount ) )
 		{
-			flSendInterval = Min( flSendInterval, 20.0f );
+			flSendInterval = Min( flSendInterval, 4.0f );
 		}
 
 		// If lobby is incorrect in an ordinary way (player left, etc),
@@ -3524,14 +3530,16 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 		{
 			// Send updates more quickly if the GC hasn't acknowledged, but don't DDoS.  Ideally the event that made the
 			// lobby incorrect triggered a Update( bForce = true );
-			flSendInterval = Min( flSendInterval, 10.0f );
+			flSendInterval = Min( flSendInterval, 4.0f );
 		}
 
 		if ( now < m_timeLastSendGameServerInfoAndConnectedPlayers + flSendInterval )
 			{ return; }
 	}
 
-	GCClientSystem()->BSendMessage( msg );
+	if (!GCClientSystem()->BSendMessage(msg)) {
+		MMLog("BSendMessage Failed\n");
+	}
 
 	// Remember what/when we sent, so we can tell next time if we need to send
 	m_timeLastSendGameServerInfoAndConnectedPlayers = now;

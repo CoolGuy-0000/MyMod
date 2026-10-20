@@ -4,13 +4,22 @@
 //
 //=============================================================================
 
-#include "stdafx.h"
+#include "gcsdk/gcsdk_auto.h"
+#include "tier1/kvpacker.h"
+
+using GCSDK::SPEW_SYSTEM_MISC;
+
+#include "tier0/memdbgon.h"
 #include "gcclient.h"
+#include "gcclientjob.h"
+#include "gcclient_sharedobjectcache.h"
 #include "steam/isteamgamecoordinator.h"
 #include "gcsdk_gcmessages.pb.h"
 #include "steammessages.pb.h"
 
 const int k_unSteamUserDesktopInstance = 1;
+
+using namespace GCSDK;
 
 namespace GCSDK
 {
@@ -530,6 +539,8 @@ public:
 		Assert( pSOCache );
 		if( pSOCache )
 		{
+			pSOCache->CreateTypeCache(2004);
+
 			SOCDebug( "CGCSOCacheSubscribedJob(owner=%s) [in cache]\n", CSteamID( msg.Body().owner() ).Render() );
 			DbgVerify( pSOCache->BParseCacheSubscribedMsg( msg.Body() ) );
 		}

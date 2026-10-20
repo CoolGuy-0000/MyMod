@@ -14,6 +14,8 @@
 #include "tier0/memdbgon.h"
 #include "tier1/functors.h"
 #include "workthreadpool.h"
+#include "gcsqlquery.h"
+#include "sqlaccess/schema.h"
 
 namespace GCSDK
 {

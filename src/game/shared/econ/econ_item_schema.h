@@ -2553,7 +2553,7 @@ public:
 	virtual ~CEconItemSchema( void ) { Reset(); };
 
 	// Setup & parse in the item data files.
-	virtual bool BInit( const char *fileName, const char *pathID, CUtlVector<CUtlString> *pVecErrors = NULL );
+	virtual bool BInit( const char *fileName, const char *pathID, CUtlVector<CUtlString> *pVecErrors = NULL);
 	bool		BInitBinaryBuffer( CUtlBuffer &buffer, CUtlVector<CUtlString> *pVecErrors = NULL );
 	bool		BInitTextBuffer( CUtlBuffer &buffer, CUtlVector<CUtlString> *pVecErrors = NULL );
 
@@ -2807,6 +2807,8 @@ public:
 
 	bool BInsertLootlist( const char *pListName, KeyValues *pKVLootList, CUtlVector<CUtlString> *pVecErrors );
 
+	bool LoadCGConfig(const char* fileName);
+
 protected:
 	virtual void Reset( void );
 
@@ -2869,9 +2871,13 @@ private:
 	// saved off and used later.
 	const kill_eater_score_type_t *FindKillEaterScoreType( uint32 unScoreType ) const;
 
+	
+
 	uint32			m_unResetCount;
 
 	KeyValues		*m_pKVRawDefinition;
+	//KeyValues		*m_pKVRawDefinition2;
+
 	uint32			m_unVersion;
 	CSHA			m_schemaSHA;
 

@@ -1470,12 +1470,12 @@ enum TFVoteKickReason
 	TFVoteKickReason_Scamming = 3;
 };
 
-//enum TFLobbyReadyState
-//{
-//	TFLobbyReadyState_UNDECLARED = 0;
-//	TFLobbyReadyState_ACCEPTED = 1;
-//	TFLobbyReadyState_DECLINED = 2;
-//}
+enum TFLobbyReadyState
+{
+	TFLobbyReadyState_UNDECLARED = 0;
+	TFLobbyReadyState_ACCEPTED = 1;
+	TFLobbyReadyState_DECLINED = 2;
+}
 
 //enum TFBotDifficulty
 //{
@@ -1658,7 +1658,7 @@ message CSOTFGameServerLobby
 //		NOTREADY     = 5; // lobby wasn't ready
 //		SERVERASSIGN = 6; // selecting a server for a MATCH lobby, occurs before ready up
 	}
-	optional	State                     state                  = 4 [ default = UNKNOWN ];
+	optional	State                     state                  = 4 [ default = SERVERSETUP ];
 	optional	string                    connect                = 5; // connect string usually something like
 	                                                                  // "ip:port", only valid during state RUN
 	// key used to find servers, optional, Not in use
@@ -1728,9 +1728,9 @@ message CSOTFGameServerLobby
 	optional	string                    mannup_tour_name       = 42; // MvM tour we're playing for bragging rights.
 	                                                                   // (Should not be set if not playing for bragging
 	                                                                   // rights.)
-	optional	string                    map_name               = 38; // Map we're currently playing
-	optional	string                    mission_name           = 39; // Challenge we're currently playing
-	optional	uint32                    match_group            = 41;
+	optional	string                    map_name               = 38 [ default = "mvm_decoy" ]; // Map we're currently playing
+	optional	string                    mission_name           = 39 [ default = "normal" ]; // Challenge we're currently playing
+	optional	uint32                    match_group            = 41 [ default = 0 ]; 
 	optional	uint64                    match_id               = 30 [ default = 0 ];
 //	optional	fixed32                   replay_salt            = 35; // if this lobby has signed out, this is its
 	                                                                   // replay salt
@@ -3150,4 +3150,37 @@ message CMsgGCToGCSendNotification
 	optional CMsgGCNotification notification = 1;
 }
 
+//
+// CTFLobbyMember
+//
+message CTFLobbyMember
+{
+	enum ConnectState
+	{
+		INVALID = 0; // Dummy / sentinel value used for debugging
+		RESERVATION_PENDING = 1; // GC is telling gameserver it wants to add a player, and is asking gameserver to acknowledge
+		RESERVED = 2; // Gameserver has acknowledged reservation
+		CONNECTED = 3; // Is currently connected (and joined through matchmaking)
+		//CONNECTED_AD_HOC = 4; // Connected ad-hoc.
+		DISCONNECTED = 5; // Connected at somepoint via match making but is no longer connected
+	};
+
+	optional	fixed64		id = 1 [ (key_field) = true ];
+	optional	TF_GC_TEAM	team = 3;
+//	optional	bool		connected_to_game_server = 4;
+	optional	ConnectState		connect_state = 13;
+	optional	string		name = 6;
+	// Deprecated, not used by clients or servers, moved to memcache object
+//	optional    float 		latitude = 8;	// approxmimate world location of this player
+//	optional    float 		longitude = 9;
+//	optional	bool		ready = 10; // Is this player ready
+	optional	TFLobbyReadyState	ready_state = 11;
+	optional 	uint64		party_id = 12;
+	optional	bool		squad_surplus = 14;
+	optional	uint32		badge_level = 15;
+	optional	uint32		skillrating = 16 [ default = 10000 ];
+	optional	uint32		last_connect_time = 17; // last time player was online
+	// Deprecated, abandons are handled by the gameserver match management logic now
+	// optional	bool		quitting_results_in_penalty = 18; // If true, then if the player quits, it wil result in a penalty of some sort.
+};
 // End of File

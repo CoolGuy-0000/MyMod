@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: CTFGSLobby object for server
+// Purpose: The lobby shared object for gameservers, managed by CTFLobby
 //
 //=============================================================================
 
@@ -10,12 +10,11 @@
 #pragma once
 #endif
 
-#include "tf_gcmessages.h"
 #include "gcsdk/protobufsharedobject.h"
+#include "tf_gcmessages.h"
+#include "tf_matchmaking_shared.h"
+#include "playergroup.h"
 #include "tf_lobby_shared.h"
-
-// CTFLobby supercedes this, this just provides CTFLobbyShared + SharedObject (whereas the GS Lobby is nested within the
-// greater proto object on the GC -- see CTFGSLobby_Dummy)
 
 class CTFGSLobby : public CTFLobbyShared, public GCSDK::CProtoBufSharedObject<CSOTFGameServerLobby, k_EProtoObjectTFGameServerLobby>
 {
@@ -25,11 +24,12 @@ public:
 
 	virtual void Dump() const OVERRIDE;
 
-	virtual CSharedObject* GetSharedObjectForMember( const CSteamID & ) OVERRIDE { return this; }
+	virtual CSharedObject* GetSharedObjectForMember(const CSteamID&) OVERRIDE { return this; }
 
 private:
-	virtual const CSOTFGameServerLobby &GSObj() const OVERRIDE final { return Obj(); }
-	virtual CSOTFGameServerLobby &GSObj() OVERRIDE final { return Obj(); }
+	virtual const CSOTFGameServerLobby& GSObj() const OVERRIDE final { return Obj(); }
+	virtual CSOTFGameServerLobby& GSObj() OVERRIDE final { return Obj(); }
 };
+
 
 #endif // TF_LOBBY_SERVER_H

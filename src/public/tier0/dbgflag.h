@@ -55,7 +55,7 @@
 #else // _DEBUG
 
 #ifdef STEAM
-#define DBGFLAG_ASSERT
+//#define DBGFLAG_ASSERT
 #endif
 #define DBGFLAG_ASSERTFATAL		// note: fatal asserts are enabled in release builds
 #define DBGFLAG_ASSERTDLG

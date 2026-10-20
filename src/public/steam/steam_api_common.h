@@ -192,7 +192,6 @@ private:
 };
 
 
-
 //-----------------------------------------------------------------------------
 // Purpose: maps a steam callback to a class member function
 //			template params: T = local class, P = parameter struct,

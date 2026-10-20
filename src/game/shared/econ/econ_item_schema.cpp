@@ -4356,7 +4356,7 @@ CEconItemSchema &CEconItemSchema::operator=( CEconItemSchema &rhs )
 //-----------------------------------------------------------------------------
 // Initializes the schema, given KV filename
 //-----------------------------------------------------------------------------
-bool CEconItemSchema::BInit( const char *fileName, const char *pathID, CUtlVector<CUtlString> *pVecErrors /* = NULL */)
+bool CEconItemSchema::BInit( const char *fileName, const char *pathID, CUtlVector<CUtlString> *pVecErrors /* = NULL */ )
 {
 	Reset();
 
@@ -4616,6 +4616,29 @@ EEquipType_t CEconItemSchema::GetEquipTypeFromClassIndex( int iClass ) const
 	return EEquipType_t::EQUIP_TYPE_INVALID;
 }
 
+bool CEconItemSchema::LoadCGConfig(const char* fileName) {
+	CUtlVector< CUtlString >* pVecErrors = NULL;
+
+	CUtlBuffer bufRawData;
+	bool bReadFileOK = g_pFullFileSystem->ReadFile(fileName, "GAME", bufRawData);
+	SCHEMA_INIT_CHECK(bReadFileOK, "Cannot load file '%s'", fileName);
+
+	CUtlBuffer bufText(bufRawData.Base(), bufRawData.TellPut(), CUtlBuffer::READ_ONLY | CUtlBuffer::TEXT_BUFFER);
+
+	KeyValues* pKVRawDefinition = new KeyValues("CEconItemSchema");
+	if (pKVRawDefinition->LoadFromBuffer(NULL, bufText))
+	{
+		KeyValues* pKVAttributes = pKVRawDefinition->FindKey("attributes");
+		SCHEMA_INIT_CHECK(NULL != pKVAttributes, "Required key \"attributes\" missing.\n");
+
+		if (NULL != pKVAttributes)
+		{
+			SCHEMA_INIT_SUBSTEP(BInitAttributes(pKVAttributes, pVecErrors));
+		}
+	}
+	pKVRawDefinition->deleteThis();
+	return true;
+}
 //-----------------------------------------------------------------------------
 // Purpose:	Initializes the schema
 // Input:	pKVRawDefinition - The raw KeyValues representation of the schema

@@ -1,4 +1,4 @@
-//========= Copyright ©, Valve LLC, All rights reserved. ======================
+//========= Copyright ? Valve LLC, All rights reserved. ======================
 //
 // Purpose: Defines a buffer pool used to group small allocations
 //
@@ -10,6 +10,7 @@
 #pragma once
 #endif
 
+#include "gc_convar.h"
 #include "tier1/utlbuffer.h"
 #include "tier1/utlvector.h"
 

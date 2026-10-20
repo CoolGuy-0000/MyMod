@@ -11,8 +11,10 @@
 #endif
 
 #include "steam/steam_api.h"
+#include "steam/isteamgamecoordinator.h"
 #include "jobmgr.h"
 #include "sharedobject.h"
+#include "gcclient_sharedobjectcache.h"
 
 class ISteamGameCoordinator;
 struct GCMessageAvailable_t;

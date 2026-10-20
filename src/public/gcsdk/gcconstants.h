@@ -103,6 +103,7 @@ enum EAlertType
 
 const char k_rgchUnknown[] = "Unknown";
 
+#define GC
 #ifdef GC
 //-----------------------------------------------------------------------------
 // SQL constants
@@ -198,5 +199,7 @@ const char *PchNameFromEUniverse( EUniverse eUniverse );
 EUniverse EUniverseFromName( const char *pchName );
 
 } // namespace GCSDK
+
+#undef GC
 
 #endif // GCCONSTANTS_H

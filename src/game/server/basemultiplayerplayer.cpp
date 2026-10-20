@@ -154,6 +154,9 @@ bool CBaseMultiplayerPlayer::ShouldRunRateLimitedCommand( const char *pszCommand
 	}
 	else if ( (gpGlobals->curtime - m_RateLimitLastCommandTimes[i]) < COMMAND_MAX_RATE )
 	{
+		if (FStrEq(pszCommand, "voicemenu")) {
+			return true;
+		}
 		// Too fast.
 		return false;
 	}

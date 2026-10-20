@@ -5,6 +5,9 @@
 //=============================================================================
 
 #include "cbase.h"
+
+#include "gcsdk/gcsdk_auto.h"
+
 #include "econ_item_inventory.h"
 #include "vgui/ILocalize.h"
 #include "tier3/tier3.h"
@@ -315,7 +318,7 @@ void CInventoryManager::PostInit( void )
 //-----------------------------------------------------------------------------
 void CInventoryManager::PreInitGC()
 {
-	REG_SHARED_OBJECT_SUBCLASS( CEconItem );
+	REG_SHARED_OBJECT_SUBCLASS( CEconItem, 0 );
 	
 #if defined (CLIENT_DLL)
 	REG_SHARED_OBJECT_SUBCLASS( CEconGameAccountClient );
@@ -327,16 +330,16 @@ void CInventoryManager::PreInitGC()
 
 #if defined(TF_CLIENT_DLL) || defined(TF_DLL)
 
-	REG_SHARED_OBJECT_SUBCLASS( CWarData );
-	REG_SHARED_OBJECT_SUBCLASS( CTFDuelSummary );
-	REG_SHARED_OBJECT_SUBCLASS( CTFMapContribution );
-	REG_SHARED_OBJECT_SUBCLASS( CTFPlayerInfo );
-	REG_SHARED_OBJECT_SUBCLASS( CEconClaimCode );
-	REG_SHARED_OBJECT_SUBCLASS( CSOTFLadderData );
-	REG_SHARED_OBJECT_SUBCLASS( CQuest );
+	REG_SHARED_OBJECT_SUBCLASS( CWarData, 0);
+	REG_SHARED_OBJECT_SUBCLASS( CTFDuelSummary, 0);
+	REG_SHARED_OBJECT_SUBCLASS( CTFMapContribution, 0);
+	REG_SHARED_OBJECT_SUBCLASS( CTFPlayerInfo, 0);
+	REG_SHARED_OBJECT_SUBCLASS( CEconClaimCode, 0);
+	REG_SHARED_OBJECT_SUBCLASS( CSOTFLadderData, 0);
+	REG_SHARED_OBJECT_SUBCLASS( CQuest, 0);
 #endif
 
-	REG_SHARED_OBJECT_SUBCLASS(CEconGameAccountForGameServers);
+	REG_SHARED_OBJECT_SUBCLASS(CEconGameAccountForGameServers, 0);
 
 }
 

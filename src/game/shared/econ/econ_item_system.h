@@ -73,7 +73,7 @@ public:
 
 protected:
 	// Read the specified item schema file. Init the item schema with the contents
-	void		ParseItemSchemaFile( const char *pFilename );
+	void		ParseItemSchemaFile(const char *pFilename);
 
 	// Key to decrypt the item description files
 	const unsigned char *GetEncryptionKey( void ) { return (unsigned char *)"A5fSXbf7"; }

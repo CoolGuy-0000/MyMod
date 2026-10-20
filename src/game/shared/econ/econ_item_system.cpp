@@ -96,6 +96,7 @@ void CEconItemSystem::Init( void )
 {
 #ifdef USES_ECON_ITEMS
 	ParseItemSchemaFile( "scripts/items/items_game.txt" );
+	//m_itemSchema.LoadCGConfig("scripts/items/cg_items_game.txt");
 #endif // USES_ECON_ITEMS
 }
 

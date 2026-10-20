@@ -72,6 +72,7 @@ CGCClientSystem::CGCClientSystem()
 	m_bConnectedToGC = false;
 	m_bLoggedOn = false;
 	m_timeLastSendHello = 0.0;
+
 }
 
 
@@ -246,6 +247,12 @@ void CGCClientSystem::InitGC()
 	// Check to see if we have already initialized the GCClient.
 	if ( m_bInittedGC )
 		return;
+
+	// Older SDKs exported this global pointer, but it is no longer supported.
+	// You should use SteamGameServerClient() or CSteamGameServerAPIContext to
+	// safely access the ISteamClient APIs from your game server application.
+	//S_API ISteamClient *g_pSteamClientGameServer;
+	g_pSteamClientGameServer = SteamGameServerClient();
 
 	// Locate our steam client interface.
 #ifdef CLIENT_DLL

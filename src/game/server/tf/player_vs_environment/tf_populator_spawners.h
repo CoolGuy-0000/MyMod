@@ -187,6 +187,13 @@ public:
 
 	CTFBot::EventChangeAttributes_t m_defaultAttributes;
 	CUtlVector< CTFBot::EventChangeAttributes_t > m_eventChangeAttributes;
+
+	struct CondList {
+		ETFCond cond;
+		float duration;
+	};
+
+	CUtlVector< CondList > m_conds;
 };
 
 //-----------------------------------------------------------------------

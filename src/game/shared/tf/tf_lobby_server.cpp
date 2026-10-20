@@ -1,4 +1,9 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
+//
+// Purpose: 
+//
+//=============================================================================
+
 
 #include "cbase.h"
 #include "gcsdk/gcsdk_auto.h"
@@ -6,8 +11,7 @@
 
 using namespace GCSDK;
 
-//-----------------------------------------------------------------------------
 void CTFGSLobby::Dump() const
 {
-	CProtoBufSharedObjectBase::Dump( GSObj() );
+	CProtoBufSharedObjectBase::Dump(GSObj());
 }
